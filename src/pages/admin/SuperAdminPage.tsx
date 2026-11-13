@@ -242,5 +242,5 @@ export function SuperAdminPage({ onExit }: { onExit: () => void }) {
 }
 
 function AdminFrame({ children, onExit, onSignOut }: { children: ReactNode; onExit: () => void; onSignOut?: () => void }) {
-  return <main className="superadmin-page"><div className="admin-topbar"><a className="admin-brand" href="#" onClick={event => { event.preventDefault(); onExit() }}><img src="/images/logo-ets-koffi.png" alt="" /><span>ETS KOFFI <small>BOUTIQUE</small></span></a>{onSignOut && <button className="admin-signout top" onClick={onSignOut}><LogOut size={15} /> Déconnexion</button>}</div><div className="admin-content">{children}</div></main>
+  return <main className="superadmin-page"><div className="admin-topbar"><a className="admin-brand" href="#" onClick={event => { event.preventDefault(); onExit() }}><img src="/images/logo-ets-koffi-mark.png" alt="" /><span>ETS KOFFI <small>BOUTIQUE</small></span></a>{onSignOut && <button className="admin-signout top" onClick={onSignOut}><LogOut size={15} /> Déconnexion</button>}</div><div className="admin-content">{children}</div></main>
 }

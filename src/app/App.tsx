@@ -55,7 +55,7 @@ export function App() {
       <div className="announcement"><span className="announcement-dot" /> Votre prochain smartphone commence ici <span className="announcement-separator">·</span> Paiement en espèces à la livraison ou au retrait</div>
       <header className="site-header">
         <a className="wordmark" href="#" onClick={(event) => { event.preventDefault(); navigate('accueil') }} aria-label="ETS KOFFI BOUTIQUE, accueil">
-          <span className="wordmark-symbol logo-emblem"><img src="/images/logo-ets-koffi.png" alt="" /></span>
+          <span className="wordmark-symbol logo-emblem"><img src="/images/logo-ets-koffi-mark.png" alt="" /></span>
           <span className="wordmark-text">ETS KOFFI <b>BOUTIQUE</b></span>
         </a>
         <nav className={`desktop-nav ${menuOpen ? 'nav-open' : ''}`} aria-label="Navigation principale">
@@ -75,7 +75,7 @@ export function App() {
 
       <footer className="site-footer">
         <div className="footer-main">
-          <a className="footer-logo-image-link" href="#" onClick={(event) => { event.preventDefault(); navigate('accueil') }}><img className="footer-logo-image" src="/images/logo-ets-koffi.png" alt="ETS KOFFI — Téléphones portables" /></a>
+          <a className="footer-logo-image-link" href="#" onClick={(event) => { event.preventDefault(); navigate('accueil') }}><img className="footer-logo-image" src="/images/logo-ets-koffi-cutout.png" alt="ETS KOFFI — Téléphones portables" /></a>
           <p>La technologie, avec du caractère.</p>
           <span className="footer-locale"><a href={`tel:+${storePhone}`} aria-label="Appeler le 05 04 04 17 05"><Phone size={14} strokeWidth={1.7} /><span>05 04 04 17 05</span></a></span>
         </div>
@@ -83,7 +83,7 @@ export function App() {
           <div className="location-copy"><span className="eyebrow"><span className="eyebrow-line" /> NOUS TROUVER</span><h2 id="location-title">La boutique, sur votre itinéraire.</h2><p>Consultez notre localisation et préparez votre venue.</p></div>
           <a className="location-link" href={storeLocationUrl} target="_blank" rel="noreferrer"><span className="location-icon"><MapPin size={19} strokeWidth={1.6} /></span><span className="location-link-copy"><small>LOCALISATION</small><strong>Ouvrir Google Maps</strong></span><ArrowUpRight className="location-arrow" size={17} /></a>
         </section>
-        <div className="footer-bottom"><span>© {new Date().getFullYear()} ETS KOFFI BOUTIQUE</span><span>Pensé pour mieux choisir.</span><a href="#superadmin" onClick={(event) => { event.preventDefault(); navigate('superadmin') }}>Espace administration</a><a href="/credits-photos.html">Crédits photos</a><a href="#top" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Retour en haut <ArrowUpRight size={14} /></a></div>
+        <div className="footer-bottom"><span>© {new Date().getFullYear()} ETS KOFFI BOUTIQUE</span><span>Pensé pour mieux choisir.</span><a href="#top" onClick={(event) => { event.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }) }}>Retour en haut <ArrowUpRight size={14} /></a></div>
       </footer>
     </div>
   )
@@ -129,7 +129,12 @@ function HomePage({ onBrowse }: { onBrowse: () => void }) {
       <Benefit icon={<ShieldCheck />} title="Paiement en confiance" text="Réglez en espèces à la livraison ou au retrait." number="03" />
     </section>
 
-    <section className="closing-cta"><span className="eyebrow"><span className="eyebrow-line" /> À VOUS DE CHOISIR</span><h2>Et si le prochain,<br /><em>c’était le vôtre ?</em></h2><button className="button button-light" onClick={onBrowse}>Voir la boutique <ArrowRight size={17} /></button></section>
+    <section className="closing-cta">
+      <div className="closing-phones" role="img" aria-label="TECNO CAMON 40, Samsung Galaxy A50 et trois modèles Infinix NOTE">
+        {carouselPhones.map((phone) => <figure className="closing-phone" key={phone.name}><img src={phone.image} alt={phone.alt} loading="lazy" /></figure>)}
+      </div>
+      <div className="closing-cta-content"><span className="eyebrow"><span className="eyebrow-line" /> À VOUS DE CHOISIR</span><h2>Et si le prochain,<br /><em>c’était le vôtre ?</em></h2><button className="button button-light" onClick={onBrowse}>Voir la boutique <ArrowRight size={17} /></button></div>
+    </section>
   </main>
 }
 
