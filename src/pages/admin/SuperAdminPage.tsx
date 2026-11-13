@@ -44,7 +44,7 @@ const normalizeModel = (value: string) => value.normalize('NFD').replace(/[\u030
 const emptyForm: ProductForm = { brand: '', model: '', price: '', promoPrice: '', stock: '1', description: '' }
 const formatPrice = (value: number) => `${new Intl.NumberFormat('fr-FR').format(value)} FCFA`
 
-export function SuperAdminPage({ onExit }: { onExit: () => void }) {
+export function SuperAdminPage({ onExit, passwordRecovery = false }: { onExit: () => void; passwordRecovery?: boolean }) {
   const [session, setSession] = useState<Session | null>(null)
   const [authLoading, setAuthLoading] = useState(true)
   const [authorized, setAuthorized] = useState(false)
@@ -53,6 +53,9 @@ export function SuperAdminPage({ onExit }: { onExit: () => void }) {
   const [productsLoadError, setProductsLoadError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [recoveryMode, setRecoveryMode] = useState(passwordRecovery)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [authError, setAuthError] = useState('')
   const [notice, setNotice] = useState('')
   const [saving, setSaving] = useState(false)
@@ -83,12 +86,13 @@ export function SuperAdminPage({ onExit }: { onExit: () => void }) {
       setSession(nextSession)
       setAuthorized(false)
       if (event === 'SIGNED_IN') setAuthError('')
+      if (event === 'PASSWORD_RECOVERY') setRecoveryMode(true)
     })
     return () => { active = false; subscription.unsubscribe() }
   }, [])
 
   useEffect(() => {
-    if (!supabase || !session) { setAuthorized(false); return }
+    if (recoveryMode || !supabase || !session) { setAuthorized(false); return }
     let active = true
     supabase.from('profiles').select('role').eq('id', session.user.id).maybeSingle().then(({ data, error }) => {
       if (!active) return
@@ -103,7 +107,7 @@ export function SuperAdminPage({ onExit }: { onExit: () => void }) {
       void supabase?.auth.signOut()
     })
     return () => { active = false }
-  }, [session])
+  }, [session, recoveryMode])
 
   useEffect(() => {
     if (!supabase || !authorized) return
@@ -148,6 +152,24 @@ export function SuperAdminPage({ onExit }: { onExit: () => void }) {
         setAuthError(`Connexion Supabase impossible : ${error.message}`)
       }
     }
+  }
+
+  const saveNewPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!supabase) return
+    setAuthError('')
+    if (newPassword.length < 8) { setAuthError('Choisis un mot de passe d’au moins 8 caractères.'); return }
+    if (newPassword !== confirmPassword) { setAuthError('Les deux mots de passe ne sont pas identiques.'); return }
+    setAuthLoading(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setAuthLoading(false)
+    if (error) { setAuthError(`Impossible de modifier le mot de passe : ${error.message}`); return }
+    await supabase.auth.signOut()
+    setRecoveryMode(false)
+    setPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setAuthError('Mot de passe modifié. Connecte-toi avec ton nouveau mot de passe.')
   }
 
   const resetForm = () => { setEditing(null); setForm(emptyForm); setImageFile(null); setImageUrlInput(''); setImageError('') }
@@ -215,7 +237,7 @@ export function SuperAdminPage({ onExit }: { onExit: () => void }) {
 
   if (authLoading) return <AdminFrame onExit={onExit}><div className="admin-loading">Vérification de la session…</div></AdminFrame>
 
-  if (!authorized) return <AdminFrame onExit={onExit}><form className="admin-login" onSubmit={signIn}><span className="admin-icon"><Store size={23} /></span><p className="admin-overline">ESPACE SÉCURISÉ</p><h1>Super Admin</h1><p>Connecte-toi avec le compte administrateur de la boutique.</p>{authError && <div className="admin-alert" role="alert">{authError}</div>}<label>Adresse e-mail<input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} required /></label><label>Mot de passe<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required /></label><button className="admin-primary" type="submit">Se connecter</button><button className="admin-back" type="button" onClick={onExit}><ArrowLeft size={15} /> Retour à la boutique</button></form></AdminFrame>
+  if (!authorized) return <AdminFrame onExit={onExit}><form className="admin-login" onSubmit={recoveryMode ? saveNewPassword : signIn}><span className="admin-icon"><Store size={23} /></span><p className="admin-overline">ESPACE SÉCURISÉ</p><h1>{recoveryMode ? 'Nouveau mot de passe' : 'Super Admin'}</h1><p>{recoveryMode ? 'Choisis un nouveau mot de passe pour ton compte administrateur.' : 'Connecte-toi avec le compte administrateur de la boutique.'}</p>{authError && <div className="admin-alert" role="alert">{authError}</div>}{recoveryMode ? <><label>Nouveau mot de passe<input type="password" autoComplete="new-password" minLength={8} value={newPassword} onChange={event => setNewPassword(event.target.value)} required /></label><label>Confirmer le mot de passe<input type="password" autoComplete="new-password" minLength={8} value={confirmPassword} onChange={event => setConfirmPassword(event.target.value)} required /></label><button className="admin-primary" type="submit" disabled={authLoading}>{authLoading ? 'Enregistrement…' : 'Enregistrer le mot de passe'}</button></> : <><label>Adresse e-mail<input type="email" autoComplete="username" value={email} onChange={event => setEmail(event.target.value)} required /></label><label>Mot de passe<input type="password" autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} required /></label><button className="admin-primary" type="submit" disabled={authLoading}>{authLoading ? 'Connexion…' : 'Se connecter'}</button></>}<button className="admin-back" type="button" onClick={onExit}><ArrowLeft size={15} /> Retour à la boutique</button></form></AdminFrame>
 
   return <AdminFrame onExit={onExit} onSignOut={() => { void supabase?.auth.signOut() }}>
     <div className="admin-dashboard">

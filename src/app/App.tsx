@@ -6,6 +6,10 @@ import { isSupabaseConfigured, supabase } from '../lib/supabase'
 
 type Page = 'accueil' | 'catalogue' | 'catalogue-demo' | 'superadmin'
 
+function isPasswordRecoveryCallback() {
+  return window.location.hash.includes('type=recovery') || new URLSearchParams(window.location.search).get('type') === 'recovery'
+}
+
 const categoryLinks = ['Tous les smartphones', 'Samsung', 'Tecno', 'Infinix', 'Xiaomi']
 const carouselPhones = [
   { name: 'TECNO CAMON 40', image: '/images/phones/cutouts/tecno-camon-40.png', alt: 'TECNO CAMON 40 Galaxy Black, vue arrière sans fond' },
@@ -21,6 +25,7 @@ const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent('
 const storeLocationUrl = 'https://share.google/CZP7X4Gmilhgha48N'
 
 function getPage(): Page {
+  if (isPasswordRecoveryCallback()) return 'superadmin'
   if (window.location.hash === '#superadmin') return 'superadmin'
   if (import.meta.env.DEV && window.location.hash === '#catalogue-demo') return 'catalogue-demo'
   return window.location.hash === '#catalogue' ? 'catalogue' : 'accueil'
@@ -28,6 +33,7 @@ function getPage(): Page {
 
 export function App() {
   const [page, setPage] = useState<Page>(getPage)
+  const [passwordRecovery, setPasswordRecovery] = useState(isPasswordRecoveryCallback)
   const [menuOpen, setMenuOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -36,6 +42,18 @@ export function App() {
     const updatePage = () => setPage(getPage())
     window.addEventListener('hashchange', updatePage)
     return () => window.removeEventListener('hashchange', updatePage)
+  }, [])
+
+  useEffect(() => {
+    if (!supabase) return
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(event => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setPasswordRecovery(true)
+        setPage('superadmin')
+        if (window.location.hash !== '#superadmin') window.history.replaceState(null, '', `${window.location.pathname}${window.location.search}#superadmin`)
+      }
+    })
+    return () => subscription.unsubscribe()
   }, [])
 
   useEffect(() => {
@@ -48,7 +66,7 @@ export function App() {
     setMenuOpen(false)
   }
 
-  if (page === 'superadmin') return <SuperAdminPage onExit={() => navigate('accueil')} />
+  if (page === 'superadmin') return <SuperAdminPage passwordRecovery={passwordRecovery} onExit={() => { setPasswordRecovery(false); navigate('accueil') }} />
 
   return (
     <div className="site-shell">
