@@ -204,7 +204,9 @@ export function SuperAdminPage({ onExit, passwordRecovery = false }: { onExit: (
     if (imageFile) {
       const extension = imageFile.name.split('.').pop()?.toLowerCase() || 'jpg'
       const imagePath = `catalog/${crypto.randomUUID()}.${extension}`
-      const { error: uploadError } = await supabase.storage.from('product-images').upload(imagePath, imageFile, { upsert: true, contentType: imageFile.type })
+      // Each upload gets a unique UUID path, so overwriting is unnecessary.
+      // Keeping upsert disabled avoids requiring broad SELECT access to storage.objects.
+      const { error: uploadError } = await supabase.storage.from('product-images').upload(imagePath, imageFile, { upsert: false, contentType: imageFile.type })
       if (uploadError) {
         setSaving(false)
         setNotice(`La photo n’a pas pu être envoyée : ${uploadError.message}`)
